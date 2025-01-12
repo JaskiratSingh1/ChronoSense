@@ -17,9 +17,16 @@ struct ContentView: View {
     // Controls navigation to the results screen
     @State private var showResults: Bool = false
     
+    // Controls navigation to history screen
+    @State private var showHistory = false
+    
+    // Env var for results
+    @StateObject private var resultsStore = ResultsStore()
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 40) {
+                Spacer()
                 
                 // MARK: -- Time Options
                 if isRunning {
@@ -61,6 +68,9 @@ struct ContentView: View {
                             actualTime = 0
                         }
                         
+                        // Store the results
+                        resultsStore.addResult(time: actualTime)
+                        
                         isRunning = false
                         // Go to results screen
                         showResults = true
@@ -76,6 +86,13 @@ struct ContentView: View {
                 }
                 
                 Spacer()
+                
+                Button("View History") {
+                    showHistory = true
+                }
+                .sheet(isPresented: $showHistory) {
+                    HistoryView(resultsStore: resultsStore)
+                }
             }
             .padding()
             .navigationTitle("Chrono Sense")
