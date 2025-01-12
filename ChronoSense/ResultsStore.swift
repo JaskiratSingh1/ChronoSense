@@ -4,15 +4,18 @@ import SwiftUI
 struct Result: Identifiable, Codable {
     let id = UUID()
     let timestamp: Date
-    let time: Double
+    
+    /// Store both the user's chosen (target) time and the actual time
+    let targetTime: Int      // e.g. 5, 10, 15, ...
+    let actualTime: Double   // e.g. 5.73
+    
+    // If you prefer Double for targetTime, just change `Int` to `Double`.
 }
 
 /// Manages an array of `Result` in UserDefaults with @AppStorage
 class ResultsStore: ObservableObject {
-    // The raw data stored in UserDefaults; we’ll encode/decode JSON
     @AppStorage("results") private var storedResultsData: Data = Data()
     
-    // Our in-memory array of results
     @Published var results: [Result] = []
     
     init() {
@@ -20,8 +23,10 @@ class ResultsStore: ObservableObject {
     }
     
     /// Adds a new recorded result
-    func addResult(time: Double) {
-        let newResult = Result(timestamp: Date(), time: time)
+    func addResult(targetTime: Int, actualTime: Double) {
+        let newResult = Result(timestamp: Date(),
+                               targetTime: targetTime,
+                               actualTime: actualTime)
         results.append(newResult)
         saveResults()
     }
@@ -36,7 +41,6 @@ class ResultsStore: ObservableObject {
     
     private func loadResults() {
         guard !storedResultsData.isEmpty else {
-            // No saved data yet
             results = []
             return
         }

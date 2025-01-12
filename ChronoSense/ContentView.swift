@@ -69,7 +69,8 @@ struct ContentView: View {
                         }
                         
                         // Store the results
-                        resultsStore.addResult(time: actualTime)
+                        resultsStore.addResult(targetTime: times[selectedIndex],
+                                               actualTime: actualTime)
                         
                         isRunning = false
                         // Go to results screen
@@ -87,6 +88,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                // Show previous results
                 Button("View History") {
                     showHistory = true
                 }
@@ -100,7 +102,8 @@ struct ContentView: View {
             .navigationDestination(isPresented: $showResults) {
                 ResultsView(
                     targetTime: Double(times[selectedIndex]),
-                    actualTime: actualTime
+                    actualTime: actualTime,
+                    resultsStore: resultsStore
                 )
             }
         }

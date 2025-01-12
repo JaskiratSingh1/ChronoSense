@@ -13,7 +13,7 @@ struct HistoryView: View {
     
     var body: some View {
         VStack {
-            Text("Your Previous Best Times")
+            Text("Your Previous Attempts")
                 .font(.title2)
                 .padding(.top)
             
@@ -25,12 +25,26 @@ struct HistoryView: View {
                             .padding(.top, 20)
                     } else {
                         ForEach(resultsStore.results) { result in
-                            VStack(alignment: .leading) {
-                                Text("**Time:** \(String(format: "%.2f", result.time))s")
-                                Text("**Date:** \(dateFormatter.string(from: result.timestamp))")
-                                    .foregroundColor(.secondary)
+                            HStack{
+                                VStack(alignment: .leading) {
+                                    // Show the actual time
+                                    Text("**Actual:** \(String(format: "%.2f", result.actualTime)) s")
+                                    // Show the chosen (target) time
+                                    Text("**Target:** \(result.targetTime) s")
+                                }
+                                .font(.title3)
+                                .padding(.vertical, 5)
+                                
+                                Spacer()
+                                VStack{
+                                    Spacer()
+                                    
+                                    // Show the date/time
+                                    Text("**Date:** \(dateFormatter.string(from: result.timestamp))")
+                                        .foregroundColor(.secondary)
+                                        .font(.footnote)
+                                }
                             }
-                            .padding(.vertical, 5)
                             
                             Divider()
                         }
