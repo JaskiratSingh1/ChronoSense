@@ -30,6 +30,12 @@ struct TimeButton: View {
 }
 
 struct ContentView: View {
+    // Track if onboarding was shown
+    @AppStorage("hasShownOnboarding") private var hasShownOnboarding = false
+    
+    // Control whether the onboarding is *currently* presented
+    @State private var showOnboarding = false
+    
     // All possible times (5s to 100s in 5s increments)
     @State private var times: [Int] = Array(stride(from: 5, through: 90, by: 5))
     
@@ -191,6 +197,20 @@ struct ContentView: View {
                     // Force the toolbar to refresh
                     UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.white]
                 }
+            }
+            .onAppear {
+                // If we haven't shown onboarding before, show it now
+                if hasShownOnboarding == false {
+                    showOnboarding = true
+                }
+            }
+            // Show as a fullScreenCover or sheet
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingView(isPresented: $showOnboarding)
+                    .onDisappear {
+                        // Mark that we've now shown onboarding
+                        hasShownOnboarding = true
+                    }
             }
         }
     }
