@@ -2,7 +2,7 @@ import SwiftUI
 
 /// A single time result, with the date/time it was recorded
 struct Result: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     let timestamp: Date
     
     /// Store both the user's chosen (target) time and the actual time

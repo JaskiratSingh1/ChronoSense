@@ -1,8 +1,29 @@
 import SwiftUI
 
+// MARK: -- Time Option Button
+struct TimeButton: View {
+    let time: Int
+    let isSelected: Bool
+    let onSelect: () -> Void
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .foregroundColor(isSelected ? .indigo : .gray)
+            Text("\(time)s")
+                .font(.system(size: isSelected ? 35 : 20, weight: isSelected ? .bold : .regular))
+                .foregroundColor(isSelected ? .mint : .white)
+        }
+        .frame(width: 75, height: 75)
+        .onTapGesture {
+            onSelect()
+        }
+    }
+}
+
 struct ContentView: View {
     // All possible times (5s to 100s in 5s increments)
-    @State private var times: [Int] = Array(stride(from: 5, through: 100, by: 5))
+    @State private var times: [Int] = Array(stride(from: 5, through: 90, by: 5))
     
     // Index of the currently selected time
     @State private var selectedIndex: Int = 0
@@ -35,22 +56,34 @@ struct ContentView: View {
                         .font(.system(size: 50, weight: .bold))
                 } else {
                     // Show all times horizontally; the selected is larger and bolder
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 30) {
-                            ForEach(times.indices, id: \.self) { index in
-                                let isSelected = (index == selectedIndex)
-                                Text("\(times[index])s")
-                                    .font(.system(size: isSelected ? 40 : 20,
-                                                  weight: isSelected ? .bold : .regular))
-                                    .foregroundColor(isSelected ? .blue : .gray)
-                                    .onTapGesture {
+                    ScrollViewReader { scrollProxy in
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 30) {
+                                // Clear frame padding to center first option
+                                Color.clear
+                                    .frame(width: (UIScreen.main.bounds.size.width - 150) / 2.0, height: 0)
+                                
+                                ForEach(times.indices, id: \.self) { index in
+                                    TimeButton(
+                                        time: times[index],
+                                        isSelected: index == selectedIndex
+                                    ) {
                                         selectedIndex = index
+                                        withAnimation {
+                                            scrollProxy.scrollTo(index, anchor: .center)
+                                        }
                                     }
+                                }
+                                
+                                // Clear frame padding to center last option
+                                Color.clear
+                                    .frame(width: (UIScreen.main.bounds.size.width - 150) / 2.0, height: 0)
                             }
+                            .frame(maxWidth: .infinity)
+                            .defaultScrollAnchor(.center)
                         }
-                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
                     }
-                    .padding(.horizontal)
                 }
                 
                 // MARK: -- Start/Stop Button
