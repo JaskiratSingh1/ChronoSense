@@ -7,14 +7,20 @@ struct TimeButton: View {
     let onSelect: () -> Void
 
     var body: some View {
+        // 🔵 Dynamic size calculation based on screen height
+        let screenHeight = UIScreen.main.bounds.height
+        let baseSize: CGFloat = isSelected ? 0.25 : 0.15
+        let buttonSize = screenHeight * baseSize
+        let fontSize = screenHeight * (isSelected ? 0.08 : 0.05)
+        
         ZStack {
             Circle()
                 .foregroundColor(isSelected ? .indigo : .gray)
             Text("\(time)s")
-                .font(.system(size: isSelected ? 35 : 20, weight: isSelected ? .bold : .regular))
+                .font(.system(size: fontSize, weight: isSelected ? .bold : .regular))
                 .foregroundColor(isSelected ? .mint : .white)
         }
-        .frame(width: 75, height: 75)
+        .frame(width: buttonSize, height: buttonSize)
         .onTapGesture {
             onSelect()
         }
@@ -61,7 +67,7 @@ struct ContentView: View {
                             HStack(spacing: 30) {
                                 // Clear frame padding to center first option
                                 Color.clear
-                                    .frame(width: (UIScreen.main.bounds.size.width - 150) / 2.0, height: 0)
+                                    .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
                                 
                                 ForEach(times.indices, id: \.self) { index in
                                     TimeButton(
@@ -77,7 +83,7 @@ struct ContentView: View {
                                 
                                 // Clear frame padding to center last option
                                 Color.clear
-                                    .frame(width: (UIScreen.main.bounds.size.width - 150) / 2.0, height: 0)
+                                    .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
                             }
                             .frame(maxWidth: .infinity)
                             .defaultScrollAnchor(.center)
@@ -112,7 +118,7 @@ struct ContentView: View {
                 }) {
                     Text(isRunning ? "Stop" : "Start")
                         .font(.largeTitle)
-                        .frame(maxWidth: .infinity, minHeight: 60)
+                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.15)
                         .foregroundColor(.white)
                         .background(isRunning ? Color.red : Color.green)
                         .cornerRadius(10)
