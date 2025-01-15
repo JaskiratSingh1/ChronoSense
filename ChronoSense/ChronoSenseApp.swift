@@ -14,6 +14,7 @@ struct ChronoSenseApp: App {
             NavigationView {
                 ContentView()
             }
+            .navigationViewStyle(StackNavigationViewStyle())
         }
     }
 }
