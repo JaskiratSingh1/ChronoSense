@@ -57,143 +57,140 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 40) {
-                Spacer()
+            ZStack {
+                // Page background
+                StarryBackground()
                 
-                // MARK: -- Time Options
-                if isRunning {
-                    let screenHeight = UIScreen.main.bounds.height
-                    let dynamicFontSize = screenHeight * 0.10
-
-                    Text("\(times[selectedIndex])s")
-                        .font(.system(size: dynamicFontSize, weight: .bold))
-                } else {
-                    // Show all times horizontally; the selected is larger and bolder
-                    ScrollViewReader { scrollProxy in
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 30) {
-                                // Clear frame padding to center first option
-                                Color.clear
-                                    .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
-                                
-                                ForEach(times.indices, id: \.self) { index in
-                                    TimeButton(
-                                        time: times[index],
-                                        isSelected: index == selectedIndex
-                                    ) {
-                                        if selectedIndex != index {
-                                            selectedIndex = index
-                                            triggerHapticFeedback()
-                                            playClickSound()
-
-                                            withAnimation {
-                                                scrollProxy.scrollTo(index, anchor: .center)
+                VStack(spacing: 40) {
+                    Spacer()
+                    
+                    // MARK: -- Time Options
+                    if isRunning {
+                        let screenHeight = UIScreen.main.bounds.height
+                        let dynamicFontSize = screenHeight * 0.10
+                        
+                        Text("\(times[selectedIndex])s")
+                            .font(.system(size: dynamicFontSize, weight: .bold))
+                            .foregroundColor(.white)  // ✅ Ensures the text stays white
+                            .shadow(color: .black.opacity(0.5), radius: 5, x: 0, y: 2)
+                    } else {
+                        // Show all times horizontally; the selected is larger and bolder
+                        ScrollViewReader { scrollProxy in
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 30) {
+                                    // Clear frame padding to center first option
+                                    Color.clear
+                                        .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
+                                    
+                                    ForEach(times.indices, id: \.self) { index in
+                                        TimeButton(
+                                            time: times[index],
+                                            isSelected: index == selectedIndex
+                                        ) {
+                                            if selectedIndex != index {
+                                                selectedIndex = index
+                                                triggerHapticFeedback()
+                                                playClickSound()
+                                                
+                                                withAnimation {
+                                                    scrollProxy.scrollTo(index, anchor: .center)
+                                                }
                                             }
                                         }
                                     }
+                                    
+                                    // Clear frame padding to center last option
+                                    Color.clear
+                                        .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
                                 }
-                                
-                                // Clear frame padding to center last option
-                                Color.clear
-                                    .frame(width: (UIScreen.main.bounds.size.width - UIScreen.main.bounds.height * 0.12) / 2.0, height: 0)
+                                .frame(maxWidth: .infinity)
+                                .background(ScrollDetector())
                             }
-                            .frame(maxWidth: .infinity)
-                            .background(ScrollDetector())
-                        }
-                        .onAppear {
-                            scrollProxy.scrollTo(selectedIndex, anchor: .center)
+                            .onAppear {
+                                scrollProxy.scrollTo(selectedIndex, anchor: .center)
+                            }
                         }
                     }
-                }
-                
-                // MARK: -- Start/Stop Button
-                Button(action: {
-                    // Play sound and haptic
-                    triggerHapticFeedback()
-                    playClickSound()
                     
-                    if !isRunning {
-                        // Start timer
-                        isRunning = true
-                        startDate = Date()
-                    } else {
-                        // Stop timer
-                        let now = Date()
-                        if let startDate = startDate {
-                            actualTime = now.timeIntervalSince(startDate)
+                    // MARK: -- Start/Stop Button
+                    Button(action: {
+                        // Play sound and haptic
+                        triggerHapticFeedback()
+                        playClickSound()
+                        
+                        if !isRunning {
+                            // Start timer
+                            isRunning = true
+                            startDate = Date()
                         } else {
-                            actualTime = 0
+                            // Stop timer
+                            let now = Date()
+                            if let startDate = startDate {
+                                actualTime = now.timeIntervalSince(startDate)
+                            } else {
+                                actualTime = 0
+                            }
+                            
+                            // Store the results
+                            resultsStore.addResult(targetTime: times[selectedIndex],
+                                                   actualTime: actualTime)
+                            
+                            isRunning = false
+                            // Go to results screen
+                            showResults = true
                         }
+                    }) {
+                        let screenHeight = UIScreen.main.bounds.height
+                        let buttonFontSize = screenHeight * 0.06
                         
-                        // Store the results
-                        resultsStore.addResult(targetTime: times[selectedIndex],
-                                               actualTime: actualTime)
-                        
-                        isRunning = false
-                        // Go to results screen
-                        showResults = true
+                        Text(isRunning ? "Stop" : "Start")
+                            .font(.system(size: buttonFontSize, weight: .bold))
+                            .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.15)
+                            .foregroundColor(.white)
+                            .background(isRunning ? Color.red : Color.green)
+                            .cornerRadius(10)
+                            .padding(.horizontal)
                     }
-                }) {
-                    let screenHeight = UIScreen.main.bounds.height
-                    let buttonFontSize = screenHeight * 0.06
                     
-                    Text(isRunning ? "Stop" : "Start")
-                        .font(.system(size: buttonFontSize, weight: .bold))
-                        .frame(maxWidth: .infinity, minHeight: UIScreen.main.bounds.height * 0.15)
-                        .foregroundColor(.white)
-                        .background(isRunning ? Color.red : Color.green)
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                }
-                
-                Spacer()
-                
-                // Show previous results
-                Button(action: {
-                    showHistory = true
-                }) {
-                    Text("View History")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white) // White text
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 20)
-                        .background(Color.cyan) // Customize the background color
-                        .cornerRadius(25) // Pill shape
-                        .shadow(color: .gray.opacity(0.4), radius: 5, x: 0, y: 3) // Optional shadow
-                }
-                .sheet(isPresented: $showHistory) {
-                    HistoryView(resultsStore: resultsStore)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline) // Keeps it sleek and centered
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    GeometryReader { geometry in
-                        let screenWidth = geometry.size.width
-                        let dynamicFontSize = screenWidth * 0.14
-                        
-                        Text("Chrono Sense")
-                            .font(.system(size: dynamicFontSize, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.mint, Color.pink],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            ) // Gradient text
-                            .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 2) // Soft shadow for depth
+                    Spacer()
+                    
+                    // Show previous results
+                    Button(action: {
+                        showHistory = true
+                    }) {
+                        Text("View History")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white) // White text
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 20)
+                            .background(Color.cyan) // Customize the background color
+                            .cornerRadius(25) // Pill shape
+                            .shadow(color: .gray.opacity(0.4), radius: 5, x: 0, y: 3)
                     }
-                    .frame(height: 40)
+                    .sheet(isPresented: $showHistory) {
+                        HistoryView(resultsStore: resultsStore)
+                    }
                 }
-            }
-            .shadow(color: Color.purple.opacity(0.5), radius: 8, x: 0, y: 0)
-            // This triggers navigation when `showResults` becomes true
-            .navigationDestination(isPresented: $showResults) {
-                ResultsView(
-                    targetTime: Double(times[selectedIndex]),
-                    actualTime: actualTime,
-                    resultsStore: resultsStore
-                )
+                .navigationBarTitleDisplayMode(.inline) // Keeps it sleek and centered
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        GlimmerText(text: "Chrono Sense")
+                        .frame(height: 40)
+                    }
+                }
+                .shadow(color: Color.purple.opacity(0.45), radius: 8, x: 0, y: 0)
+                // This triggers navigation when `showResults` becomes true
+                .navigationDestination(isPresented: $showResults) {
+                    ResultsView(
+                        targetTime: Double(times[selectedIndex]),
+                        actualTime: actualTime,
+                        resultsStore: resultsStore
+                    )
+                }
+                .onAppear {
+                    // Force the toolbar to refresh
+                    UINavigationBar.appearance().titleTextAttributes = [.foregroundColor: UIColor.white]
+                }
             }
         }
     }
